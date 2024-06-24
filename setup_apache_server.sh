@@ -53,21 +53,24 @@ add_php_extension() {
     fi
 }
 
+# Prompt for new superuser details
+prompt_for_input "Enter MySQL superuser username" new_username
+prompt_for_input "Enter MySQL superuser password" new_password
+
+# Prompt for php version
+prompt_for_input "Enter php version to be install" php_version
+
 # Update the package list
 echo "Updating package list..."
 sudo apt update
 
 # Install Apache
 echo "Installing Apache..."
-sudo apt install apache2 -y
-
-# Enable Apache to start on boot and start the service
-echo "Enabling and starting Apache..."
-sudo systemctl status apache2
+sudo NEEDRESTART_MODE=a apt install apache2 -y
 
 # Set up firewall
 echo "Setting up firewall..."
-sudo apt install ufw -y
+sudo NEEDRESTART_MODE=a apt install ufw -y
 sudo ufw allow 'Apache'
 sudo ufw allow ssh
 sudo ufw allow OpenSSH
@@ -80,27 +83,20 @@ yes | sudo ufw enable
 
 # Install MySQL
 echo "Installing MySQL..."
-sudo apt install mysql-server -y
+sudo NEEDRESTART_MODE=a apt install mysql-server -y
 sudo mysql -e "SET GLOBAL binlog_expire_logs_seconds = 86400;"
-
-# Prompt for new superuser details
-prompt_for_input "Enter MySQL superuser username" new_username
-prompt_for_input "Enter MySQL superuser password" new_password
 
 sudo mysql -e "CREATE USER '$new_username'@'localhost' IDENTIFIED BY '$new_password';"
 sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO '$new_username'@'localhost';"
 sudo mysql -e "FLUSH PRIVILEGES;"
 
-# Prompt for php version
-prompt_for_input "Enter php version to be install" php_version
-
 # Install PHP and required modules
 echo "Installing PHP and required modules..."
 yes | add-apt-repository ppa:ondrej/php
 sudo apt update
-sudo apt install php$php_version -y
-sudo apt install php$php_version-common php$php_version-mysql php$php_version-xml php$php_version-xmlrpc php$php_version-curl php$php_version-gd php$php_version-imagick php$php_version-cli php$php_version-dev php$php_version-imap php$php_version-mbstring php$php_version-opcache php$php_version-soap php$php_version-zip php$php_version-intl php$php_version-bcmath libapache2-mod-php$php_version php-pear -y
-sudo apt install autoconf g++ make openssl libssl3 libssl-dev libcurl4-openssl-dev pkg-config libsasl2-dev libpcre3-dev -y
+sudo NEEDRESTART_MODE=a apt install php$php_version -y
+sudo NEEDRESTART_MODE=a apt install php$php_version-common php$php_version-mysql php$php_version-xml php$php_version-xmlrpc php$php_version-curl php$php_version-gd php$php_version-imagick php$php_version-cli php$php_version-dev php$php_version-imap php$php_version-mbstring php$php_version-opcache php$php_version-soap php$php_version-zip php$php_version-intl php$php_version-bcmath libapache2-mod-php$php_version php-pear -y
+sudo NEEDRESTART_MODE=a apt install autoconf g++ make openssl libssl3 libssl-dev libcurl4-openssl-dev pkg-config libsasl2-dev libpcre3-dev -y
 
 # Enabling required modules
 echo "Enabling required modules..."
@@ -126,7 +122,7 @@ sudo a2enmod http2
 sudo a2dismod php$php_version
 sudo a2dismod mpm_prefork
 sudo a2enmod mpm_event proxy_fcgi setenvif
-sudo apt install php$php_version-fpm -y
+sudo NEEDRESTART_MODE=a apt install php$php_version-fpm -y
 sudo systemctl start php$php_version-fpm
 sudo a2enconf php$php_version-fpm
 
@@ -151,8 +147,8 @@ sudo systemctl restart php$php_version-fpm
 
 # Install additional tools
 echo "Installing additional tools..."
-sudo apt install gnupg curl git zip unzip -y
-sudo apt install certbot python3-certbot-apache -y
+sudo NEEDRESTART_MODE=a apt install gnupg curl git zip unzip -y
+sudo NEEDRESTART_MODE=a apt install certbot python3-certbot-apache -y
 sudo certbot plugins
 cron_job="0 0,12 * * * certbot renew --quiet --no-self-upgrade"
 (sudo crontab -l 2>/dev/null; echo "$cron_job") | sudo crontab -
@@ -163,7 +159,7 @@ echo "Installing mongodb..."
 curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
 echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
 sudo apt update
-sudo apt install mongodb-org -y
+sudo NEEDRESTART_MODE=a apt install mongodb-org -y
 sudo systemctl start mongod.service
 sudo systemctl enable mongod
 
@@ -174,7 +170,7 @@ sudo systemctl restart php$php_version-fpm
 add_php_extension "mongodb.so" "$php_ini_file"
 
 # Install mongodb driver
-sudo pecl install -f mongodb-1.19.3
+sudo NEEDRESTART_MODE=a printf "\n" | pecl install -f mongodb-1.19.3
 
 # Install nvm
 echo "Installing nvm..."
