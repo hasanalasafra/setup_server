@@ -34,6 +34,25 @@ update_php_ini() {
     fi
 }
 
+# Function to add a PHP extension to php.ini if it doesn't exist
+add_php_extension() {
+    local extension_line="extension=$1"
+    local php_ini_file="$2"
+
+    # Check if the extension line exists as a commented line
+    if grep -q "^\s*;${extension_line}" "$php_ini_file"; then
+        # Uncomment the extension line
+        sudo sed -i "s/^\s*;${extension_line}/${extension_line}/" "$php_ini_file"
+        echo "Uncommented extension line in php.ini: $extension_line"
+    elif ! grep -Fxq "$extension_line" "$php_ini_file"; then
+        # If the line doesn't exist, add it to the end of the file
+        echo "$extension_line" | sudo tee -a "$php_ini_file" > /dev/null
+        echo "Extension line added to php.ini: $extension_line"
+    else
+        echo "Extension line already exists in php.ini: $extension_line"
+    fi
+}
+
 # Update the package list
 echo "Updating package list..."
 sudo apt update
@@ -147,20 +166,12 @@ sudo apt update
 sudo apt install mongodb-org -y
 sudo systemctl start mongod.service
 sudo systemctl enable mongod
-extension_line="extension=mongodb.so"
 
 # Restart PHP to apply changes
 echo "Restarting PHP..."
 sudo systemctl restart php$php_version-fpm
 
-# Check if the extension line already exists in the php.ini file
-if ! grep -Fxq "$extension_line" "$php_ini_file"; then
-    # If the line doesn't exist, add it to the end of the file
-    echo "$extension_line" | sudo tee -a "$php_ini_file" > /dev/null
-    echo "Extension line added to php.ini: $extension_line"
-else
-    echo "Extension line already exists in php.ini: $extension_line"
-fi
+add_php_extension "mongodb.so" "$PHP_INI_PATH"
 
 # Install mongodb driver
 sudo pecl install -f mongodb-1.19.3
@@ -184,6 +195,10 @@ npm install pm2@latest -g -y
 # Restart Apache to apply changes
 echo "Restarting Apache..."
 sudo systemctl restart apache2
+
+# Restart PHP to apply changes
+echo "Restarting PHP..."
+sudo systemctl restart php$php_version-fpm
 
 # Clean up
 echo "Cleaning up..."
