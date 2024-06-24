@@ -171,7 +171,7 @@ sudo systemctl enable mongod
 echo "Restarting PHP..."
 sudo systemctl restart php$php_version-fpm
 
-add_php_extension "mongodb.so" "$PHP_INI_PATH"
+add_php_extension "mongodb.so" "$php_ini_file"
 
 # Install mongodb driver
 sudo pecl install -f mongodb-1.19.3
