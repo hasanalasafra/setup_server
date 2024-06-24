@@ -1,7 +1,5 @@
 #!/bin/bash
 
-export DEBIAN_FRONTEND=noninteractive
-
 # Function to prompt for input
 prompt_for_input() {
     local prompt="$1"
@@ -42,7 +40,7 @@ sudo apt update
 
 # Install Apache
 echo "Installing Apache..."
-yes | sudo apt install apache2 -y
+sudo apt install apache2 -y
 
 # Enable Apache to start on boot and start the service
 echo "Enabling and starting Apache..."
@@ -50,7 +48,7 @@ sudo systemctl status apache2
 
 # Set up firewall
 echo "Setting up firewall..."
-yes | sudo apt install ufw -y
+sudo apt install ufw -y
 sudo ufw allow 'Apache'
 sudo ufw allow ssh
 sudo ufw allow OpenSSH
@@ -63,7 +61,7 @@ yes | sudo ufw enable
 
 # Install MySQL
 echo "Installing MySQL..."
-yes | sudo apt install mysql-server -y
+sudo apt install mysql-server -y
 sudo mysql -e "SET GLOBAL binlog_expire_logs_seconds = 86400;"
 
 # Prompt for new superuser details
@@ -81,19 +79,9 @@ prompt_for_input "Enter php version to be install" php_version
 echo "Installing PHP and required modules..."
 yes | add-apt-repository ppa:ondrej/php
 sudo apt update
-yes | sudo apt install php$php_version -y
-yes | sudo apt install php$php_version-common php$php_version-mysql php$php_version-xml php$php_version-xmlrpc php$php_version-curl php$php_version-gd php$php_version-imagick php$php_version-cli php$php_version-dev php$php_version-imap php$php_version-mbstring php$php_version-opcache php$php_version-soap php$php_version-zip php$php_version-intl php$php_version-bcmath libapache2-mod-php$php_version php-pear -y
-yes | sudo apt install autoconf g++ make openssl libssl3 libssl-dev libcurl4-openssl-dev pkg-config libsasl2-dev libpcre3-dev -y
-php_ini_file="/etc/php/$php_version/fpm/php.ini"
-
-# Change php.ini settings
-echo "Change php.ini settings..."
-update_php_ini "upload_max_filesize" "64M" "$php_ini_file"
-update_php_ini "post_max_size" "64M" "$php_ini_file"
-update_php_ini "memory_limit" "256M" "$php_ini_file"
-update_php_ini "max_execution_time" "600" "$php_ini_file"
-update_php_ini "max_input_time" "600" "$php_ini_file"
-update_php_ini "max_input_vars" "10000" "$php_ini_file"
+sudo apt install php$php_version -y
+sudo apt install php$php_version-common php$php_version-mysql php$php_version-xml php$php_version-xmlrpc php$php_version-curl php$php_version-gd php$php_version-imagick php$php_version-cli php$php_version-dev php$php_version-imap php$php_version-mbstring php$php_version-opcache php$php_version-soap php$php_version-zip php$php_version-intl php$php_version-bcmath libapache2-mod-php$php_version php-pear -y
+sudo apt install autoconf g++ make openssl libssl3 libssl-dev libcurl4-openssl-dev pkg-config libsasl2-dev libpcre3-dev -y
 
 # Enabling required modules
 echo "Enabling required modules..."
@@ -119,9 +107,20 @@ sudo a2enmod http2
 sudo a2dismod php$php_version
 sudo a2dismod mpm_prefork
 sudo a2enmod mpm_event proxy_fcgi setenvif
-yes | sudo apt install php$php_version-fpm -y
+sudo apt install php$php_version-fpm -y
 sudo systemctl start php$php_version-fpm
 sudo a2enconf php$php_version-fpm
+
+php_ini_file="/etc/php/$php_version/fpm/php.ini"
+
+# Change php.ini settings
+echo "Change php.ini settings..."
+update_php_ini "upload_max_filesize" "64M" "$php_ini_file"
+update_php_ini "post_max_size" "64M" "$php_ini_file"
+update_php_ini "memory_limit" "256M" "$php_ini_file"
+update_php_ini "max_execution_time" "600" "$php_ini_file"
+update_php_ini "max_input_time" "600" "$php_ini_file"
+update_php_ini "max_input_vars" "10000" "$php_ini_file"
 
 # Restart Apache to apply changes
 echo "Restarting Apache..."
@@ -133,9 +132,9 @@ sudo systemctl restart php$php_version-fpm
 
 # Install additional tools
 echo "Installing additional tools..."
-yes | sudo apt install gnupg curl git zip unzip -y
-yes | sudo apt install certbot python3-certbot-apache -y
-yes | sudo certbot plugins
+sudo apt install gnupg curl git zip unzip -y
+sudo apt install certbot python3-certbot-apache -y
+sudo certbot plugins
 cron_job="0 0,12 * * * certbot renew --quiet --no-self-upgrade"
 (sudo crontab -l 2>/dev/null; echo "$cron_job") | sudo crontab -
 
@@ -145,7 +144,7 @@ echo "Installing mongodb..."
 curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
 echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
 sudo apt update
-yes | sudo apt install mongodb-org -y
+sudo apt install mongodb-org -y
 sudo systemctl start mongod.service
 sudo systemctl enable mongod
 extension_line="extension=mongodb.so"
@@ -164,7 +163,7 @@ else
 fi
 
 # Install mongodb driver
-yes | sudo pecl install -f mongodb-1.19.3 -y
+sudo pecl install -f mongodb-1.19.3
 
 # Install nvm
 echo "Installing nvm..."
@@ -185,8 +184,6 @@ npm install pm2@latest -g -y
 # Restart Apache to apply changes
 echo "Restarting Apache..."
 sudo systemctl restart apache2
-
-unset DEBIAN_FRONTEND
 
 # Clean up
 echo "Cleaning up..."
