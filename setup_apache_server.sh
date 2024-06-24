@@ -24,9 +24,12 @@ update_php_ini() {
     local value="$2"
     local php_ini="$3"
 
-    # Check if the setting already exists and update it
-    if grep -q "^$setting" "$php_ini"; then
-        sudo sed -i "s/^\($setting\s*=\s*\).*$/\1$value/" "$php_ini"
+    # Check if the setting exists as commented and uncomment it
+    if grep -q "^\s*;$setting" "$php_ini"; then
+        sudo sed -i "s/^\s*;$setting\s*=.*/$setting = $value/" "$php_ini"
+    # Check if the setting exists uncommented and update it
+    elif grep -q "^\s*$setting" "$php_ini"; then
+        sudo sed -i "s/^\s*$setting\s*=.*/$setting = $value/" "$php_ini"
     else
         # If the setting does not exist, add it
         echo "$setting = $value" | sudo tee -a "$php_ini" > /dev/null
@@ -89,6 +92,8 @@ update_php_ini "upload_max_filesize" "64M" "$php_ini_file"
 update_php_ini "post_max_size" "64M" "$php_ini_file"
 update_php_ini "memory_limit" "256M" "$php_ini_file"
 update_php_ini "max_execution_time" "600" "$php_ini_file"
+update_php_ini "max_input_time" "600" "$php_ini_file"
+update_php_ini "max_input_vars" "10000" "$php_ini_file"
 
 # Enabling required modules
 echo "Enabling required modules..."
