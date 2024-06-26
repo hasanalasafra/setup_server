@@ -17,7 +17,7 @@ prompt_for_input() {
 }
 
 # Function to update php.ini settings
-update_setting() {
+update_php_config() {
     local setting="$1"
     local value="$2"
     local php_ini="$3"
@@ -53,6 +53,31 @@ add_php_extension() {
     fi
 }
 
+update_mysql_config() {
+    local config_file="/etc/mysql/mysql.conf.d/mysqld.cnf"  # Path to your MySQL config file
+    local variable_name="$1"
+    local value="$2"
+    
+    # Check if the variable already exists and is commented
+    if grep -qE "^\s*#\s*$variable_name\b" "$config_file"; then
+        # Uncomment the variable
+        sed -i "s/^\s*#\s*\($variable_name\b\)/\1/" "$config_file"
+    elif ! grep -qE "^\s*$variable_name\b" "$config_file"; then
+        # Variable doesn't exist, add it
+        echo "$variable_name = $value" >> "$config_file"
+    fi
+    
+    # Update the value if the variable exists
+    if grep -qE "^\s*$variable_name\b" "$config_file"; then
+        sed -i "s/^\s*$variable_name\s*=.*/$variable_name = $value/" "$config_file"
+    fi
+    
+    # Restart MySQL service (optional, uncomment if needed)
+    # systemctl restart mysql
+    
+    echo "MySQL configuration updated: $variable_name = $value"
+}
+
 # Prompt for new superuser details
 prompt_for_input "Enter MySQL superuser username" new_username
 prompt_for_input "Enter MySQL superuser password" new_password
@@ -85,6 +110,28 @@ yes | sudo ufw enable
 echo "Installing MySQL..."
 sudo NEEDRESTART_MODE=a apt install mysql-server -y
 sudo mysql -e "SET GLOBAL binlog_expire_logs_seconds = 86400;"
+
+config_file_path="/etc/mysql/mysql.conf.d/mysqld.cnf"
+directive="skip-name-resolve"
+
+# Check if the directive already exists and is commented
+if grep -qE "^\s*#\s*$directive\b" "$config_file_path"; then
+    # Uncomment the directive
+    sed -i "s/^\s*#\s*\($directive\b\)/\1/" "$config_file_path"
+elif ! grep -qE "^\s*$directive\b" "$config_file_path"; then
+    # Directive doesn't exist, add it under [mysqld] section
+    sed -i "/^\[mysqld\]/a $directive" "$config_file_path"
+fi
+
+update_mysql_config "innodb_buffer_pool_size" "512M"
+update_mysql_config "innodb_log_file_size" "64M"
+update_mysql_config "innodb_file_per_table" "1"
+update_mysql_config "innodb_log_buffer_size" "4M"
+update_mysql_config "max_connections" "300"
+update_mysql_config "slow_query_log" "1"
+update_mysql_config "slow_query_log_file" "/var/log/mysql/mysql-slow.log"
+update_mysql_config "long_query_time" "2"
+update_mysql_config "binlog_expire_logs_seconds" "86400"
 
 sudo mysql -e "CREATE USER '$new_username'@'localhost' IDENTIFIED BY '$new_password';"
 sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO '$new_username'@'localhost';"
@@ -131,33 +178,33 @@ php_fpm_file="/etc/php/$php_version/fpm/pool.d/www.conf"
 
 # Change php.ini settings
 echo "Change php.ini settings..."
-update_setting "upload_max_filesize" "64M" "$php_ini_file"
-update_setting "post_max_size" "64M" "$php_ini_file"
-update_setting "memory_limit" "256M" "$php_ini_file"
-update_setting "max_execution_time" "600" "$php_ini_file"
-update_setting "max_input_time" "600" "$php_ini_file"
-update_setting "max_input_vars" "10000" "$php_ini_file"
+update_php_config "upload_max_filesize" "64M" "$php_ini_file"
+update_php_config "post_max_size" "64M" "$php_ini_file"
+update_php_config "memory_limit" "256M" "$php_ini_file"
+update_php_config "max_execution_time" "600" "$php_ini_file"
+update_php_config "max_input_time" "600" "$php_ini_file"
+update_php_config "max_input_vars" "10000" "$php_ini_file"
 
 add_php_extension "opcache.so" "$php_ini_file"
 
-update_setting "opcache.enable" "1" "$php_ini_file"
-update_setting "opcache.enable_cli" "1" "$php_ini_file"
-update_setting "opcache.memory_consumption" "128" "$php_ini_file"
-update_setting "opcache.interned_strings_buffer" "8" "$php_ini_file"
-update_setting "opcache.max_accelerated_files" "10000" "$php_ini_file"
-update_setting "opcache.revalidate_freq" "2" "$php_ini_file"
-update_setting "opcache.fast_shutdown" "1" "$php_ini_file"
+update_php_config "opcache.enable" "1" "$php_ini_file"
+update_php_config "opcache.enable_cli" "1" "$php_ini_file"
+update_php_config "opcache.memory_consumption" "128" "$php_ini_file"
+update_php_config "opcache.interned_strings_buffer" "8" "$php_ini_file"
+update_php_config "opcache.max_accelerated_files" "10000" "$php_ini_file"
+update_php_config "opcache.revalidate_freq" "2" "$php_ini_file"
+update_php_config "opcache.fast_shutdown" "1" "$php_ini_file"
 
-update_setting "pm" "dynamic" "$php_fpm_file"
-update_setting "pm.max_children" "2" "$php_fpm_file"
-update_setting "pm.start_servers" "1" "$php_fpm_file"
-update_setting "pm.min_spare_servers" "1" "$php_fpm_file"
-update_setting "pm.max_spare_servers" "2" "$php_fpm_file"
-update_setting "pm.max_requests" "200" "$php_fpm_file"
-update_setting "request_terminate_timeout" "5s" "$php_fpm_file"
-update_setting "rlimit_files" "1024" "$php_fpm_file"
-update_setting "rlimit_core" "1" "$php_fpm_file"
-update_setting "rlimit_core" "1" "$php_fpm_file"
+update_php_config "pm" "dynamic" "$php_fpm_file"
+update_php_config "pm.max_children" "2" "$php_fpm_file"
+update_php_config "pm.start_servers" "1" "$php_fpm_file"
+update_php_config "pm.min_spare_servers" "1" "$php_fpm_file"
+update_php_config "pm.max_spare_servers" "2" "$php_fpm_file"
+update_php_config "pm.max_requests" "200" "$php_fpm_file"
+update_php_config "request_terminate_timeout" "5s" "$php_fpm_file"
+update_php_config "rlimit_files" "1024" "$php_fpm_file"
+update_php_config "rlimit_core" "1" "$php_fpm_file"
+update_php_config "rlimit_core" "1" "$php_fpm_file"
 
 # Restart Apache to apply changes
 echo "Restarting Apache..."
