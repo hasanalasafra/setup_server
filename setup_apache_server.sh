@@ -17,7 +17,7 @@ prompt_for_input() {
 }
 
 # Function to update php.ini settings
-update_php_ini() {
+update_setting() {
     local setting="$1"
     local value="$2"
     local php_ini="$3"
@@ -127,15 +127,37 @@ sudo systemctl start php$php_version-fpm
 sudo a2enconf php$php_version-fpm
 
 php_ini_file="/etc/php/$php_version/fpm/php.ini"
+php_fpm_file="/etc/php/$php_version/fpm/pool.d/www.conf"
 
 # Change php.ini settings
 echo "Change php.ini settings..."
-update_php_ini "upload_max_filesize" "64M" "$php_ini_file"
-update_php_ini "post_max_size" "64M" "$php_ini_file"
-update_php_ini "memory_limit" "256M" "$php_ini_file"
-update_php_ini "max_execution_time" "600" "$php_ini_file"
-update_php_ini "max_input_time" "600" "$php_ini_file"
-update_php_ini "max_input_vars" "10000" "$php_ini_file"
+update_setting "upload_max_filesize" "64M" "$php_ini_file"
+update_setting "post_max_size" "64M" "$php_ini_file"
+update_setting "memory_limit" "256M" "$php_ini_file"
+update_setting "max_execution_time" "600" "$php_ini_file"
+update_setting "max_input_time" "600" "$php_ini_file"
+update_setting "max_input_vars" "10000" "$php_ini_file"
+
+add_php_extension "opcache.so" "$php_ini_file"
+
+update_setting "opcache.enable" "1" "$php_ini_file"
+update_setting "opcache.enable_cli" "1" "$php_ini_file"
+update_setting "opcache.memory_consumption" "128" "$php_ini_file"
+update_setting "opcache.interned_strings_buffer" "8" "$php_ini_file"
+update_setting "opcache.max_accelerated_files" "10000" "$php_ini_file"
+update_setting "opcache.revalidate_freq" "2" "$php_ini_file"
+update_setting "opcache.fast_shutdown" "1" "$php_ini_file"
+
+update_setting "pm" "dynamic" "$php_fpm_file"
+update_setting "pm.max_children" "2" "$php_fpm_file"
+update_setting "pm.start_servers" "1" "$php_fpm_file"
+update_setting "pm.min_spare_servers" "1" "$php_fpm_file"
+update_setting "pm.max_spare_servers" "2" "$php_fpm_file"
+update_setting "pm.max_requests" "200" "$php_fpm_file"
+update_setting "request_terminate_timeout" "5s" "$php_fpm_file"
+update_setting "rlimit_files" "1024" "$php_fpm_file"
+update_setting "rlimit_core" "1" "$php_fpm_file"
+update_setting "rlimit_core" "1" "$php_fpm_file"
 
 # Restart Apache to apply changes
 echo "Restarting Apache..."
