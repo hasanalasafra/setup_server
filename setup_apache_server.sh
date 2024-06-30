@@ -196,15 +196,10 @@ update_php_config "opcache.revalidate_freq" "2" "$php_ini_file"
 update_php_config "opcache.fast_shutdown" "1" "$php_ini_file"
 
 update_php_config "pm" "dynamic" "$php_fpm_file"
-update_php_config "pm.max_children" "2" "$php_fpm_file"
+update_php_config "pm.max_children" "3" "$php_fpm_file"
 update_php_config "pm.start_servers" "1" "$php_fpm_file"
 update_php_config "pm.min_spare_servers" "1" "$php_fpm_file"
-update_php_config "pm.max_spare_servers" "2" "$php_fpm_file"
-update_php_config "pm.max_requests" "200" "$php_fpm_file"
-update_php_config "request_terminate_timeout" "5s" "$php_fpm_file"
-update_php_config "rlimit_files" "1024" "$php_fpm_file"
-update_php_config "rlimit_core" "1" "$php_fpm_file"
-update_php_config "rlimit_core" "1" "$php_fpm_file"
+update_php_config "pm.max_spare_servers" "3" "$php_fpm_file"
 
 # Restart Apache to apply changes
 echo "Restarting Apache..."
