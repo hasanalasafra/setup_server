@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Function to prompt for input
 prompt_for_input() {
     local prompt="$1"
@@ -196,8 +194,8 @@ update_php_config "opcache.revalidate_freq" "2" "$php_ini_file"
 update_php_config "opcache.fast_shutdown" "1" "$php_ini_file"
 
 update_php_config "pm" "dynamic" "$php_fpm_file"
-update_php_config "pm.max_children" "3" "$php_fpm_file"
-update_php_config "pm.start_servers" "1" "$php_fpm_file"
+update_php_config "pm.max_children" "6" "$php_fpm_file"
+update_php_config "pm.start_servers" "2" "$php_fpm_file"
 update_php_config "pm.min_spare_servers" "1" "$php_fpm_file"
 update_php_config "pm.max_spare_servers" "3" "$php_fpm_file"
 
