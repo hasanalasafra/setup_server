@@ -1,18 +1,24 @@
 #!/bin/bash
 
-if [ "$#" -ne 3 ]; then
+# Function to prompt for input with validation
+get_input() {
+    local prompt="$1"
+    local var_name="$2"
+    local value=""
+    
+    while [ -z "$value" ]; do
+        read -p "$prompt" value
+        if [ -z "$value" ]; then
+            echo "Error: Input cannot be empty. Please try again."
+        fi
+    done
+    eval "$var_name=\"$value\""
+}
 
-  echo "Usage: $0 <newServer> <ServerAdminEmail> <version>"
-
-  exit 1
-
-fi
-
-newServer="$1"
-
-ServerAdminEmail="$2"
-
-version="$3"
+# Get required information from user
+get_input "Enter the server name: " newServer
+get_input "Enter the server admin email: " ServerAdminEmail
+get_input "Enter the PHP version (e.g., 7.4): " version
 
 confFile="/etc/apache2/sites-available/$newServer.conf"
 
