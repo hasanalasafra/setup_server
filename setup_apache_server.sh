@@ -137,7 +137,7 @@ sudo mysql -e "FLUSH PRIVILEGES;"
 
 # Install PHP and required modules
 echo "Installing PHP and required modules..."
-yes | add-apt-repository ppa:ondrej/php
+yes | sudo add-apt-repository ppa:ondrej/php
 sudo apt update
 sudo NEEDRESTART_MODE=a apt install php$php_version -y
 sudo NEEDRESTART_MODE=a apt install php$php_version-common php$php_version-mysql php$php_version-xml php$php_version-xmlrpc php$php_version-curl php$php_version-gd php$php_version-imagick php$php_version-cli php$php_version-dev php$php_version-imap php$php_version-mbstring php$php_version-opcache php$php_version-soap php$php_version-zip php$php_version-intl php$php_version-bcmath libapache2-mod-php$php_version php-pear -y
@@ -146,16 +146,16 @@ sudo NEEDRESTART_MODE=a apt install autoconf g++ make openssl libssl3 libssl-dev
 # Enabling required modules
 echo "Enabling required modules..."
 sudo phpenmod mbstring
-a2enmod proxy
-a2enmod proxy_http
-a2enmod proxy_ajp
-a2enmod rewrite
-a2enmod deflate
-a2enmod headers
-a2enmod proxy_balancer
-a2enmod proxy_connect
-a2enmod proxy_html
-a2enmod ssl
+sudo a2enmod proxy
+sudo a2enmod proxy_http
+sudo a2enmod proxy_ajp
+sudo a2enmod rewrite
+sudo a2enmod deflate
+sudo a2enmod headers
+sudo a2enmod proxy_balancer
+sudo a2enmod proxy_connect
+sudo a2enmod proxy_html
+sudo a2enmod ssl
 
 # Restart Apache to apply changes
 echo "Restarting Apache..."
